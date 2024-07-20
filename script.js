@@ -1,118 +1,121 @@
-// Get the canvas element
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+// Declare the constants
+let currentPlayer = 'X';
+let gameBoard = ['', '', '', '', '', '', '', '', ''];
+let gameActive = true;
+let aiPlayer = 'O';
 
-// Set the canvas dimensions
-canvas.width = 800;
-canvas.height = 600;
+// Function for player moves
+function makeMove(cell) {
+  const index = Array.from(cell.parentNode.children).indexOf(cell);
 
-// Define some constants
-const PADDLE_WIDTH = 10;
-const PADDLE_HEIGHT = 100;
-const BALL_SIZE = 10;
-const FPS = 60;
+  if (gameBoard[index] === '' && gameActive) {
+    gameBoard[index] = currentPlayer;
+    cell.textContent = currentPlayer;
+    checkWinner();
+    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+    if (currentPlayer === aiPlayer) {
+      makeAIMove();
+    }
+  }
+}
 
-// Define the paddles and ball
-let paddle1 = {
-  x: 10,
-  y: canvas.height / 2 - PADDLE_HEIGHT / 2,
-  speed: 0
-};
+// Function for AI movesal
+function makeAIMove() {
+  let bestMove = -1;
+  let bestScore = -Infinity;
+ 
+  for (let i = 0; i < 9; i++) {
+    if (gameBoard[i] === '') {
+      gameBoard[i] = aiPlayer;
+      let score = minimax(gameBoard, 0, false);
+      gameBoard[i] = '';
+      if (score > bestScore) {
+        bestScore = score;
+        bestMove = i;
+      }
+    }
+  }
 
-let paddle2 = {
-  x: canvas.width - 20,
-  y: canvas.height / 2 - PADDLE_HEIGHT / 2,
-  speed: 0
-};
+  gameBoard[bestMove] = aiPlayer;
+  document.querySelectorAll('.cell')[bestMove].textContent = aiPlayer;
+  checkWinner();
+  currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+}
 
-let ball = {
-  x: canvas.width / 2,
-  y: canvas.height / 2,
-  vx: 2,
-  vy: 2,
-  speed: 2
-};
+// Minimax function
+function minimax(board, depth, isMaximizing) {
+  if (checkWinner() !== null) {
+    if (checkWinner() === aiPlayer) {
+      return 10 - depth;
+    } else if (checkWinner() === 'X') {
+      return depth - 10;
+    } else {
+      return 0;
+    }
+  }
 
-// Define the AI
-function ai() {
-    
-  // Move the AI paddle towards the ball
-  if (ball.y < paddle2.y + PADDLE_HEIGHT / 2) {
-    paddle2.speed = -2;
-  } else if (ball.y > paddle2.y + PADDLE_HEIGHT / 2) {
-    paddle2.speed = 2;
+  if (isMaximizing) {
+    let bestScore = -Infinity;
+    for (let i = 0; i < 9; i++) {
+      if (board[i] === '') {
+        board[i] = aiPlayer;
+        let score = minimax(board, depth + 1, false);
+        board[i] = '';
+        if (score > bestScore) {
+          bestScore = score;
+        }
+      }
+    }
+    return bestScore;
   } else {
-    paddle2.speed = 0;
+    let bestScore = Infinity;
+    for (let i = 0; i < 9; i++) {
+      if (board[i] === '') {
+        board[i] = 'X';
+        let score = minimax(board, depth + 1, true);
+        board[i] = '';
+        if (score < bestScore) {
+          bestScore = score;
+        }
+      }
+    }
+    return bestScore;
   }
 }
 
-// Main game loop
-function update() {
-  // Update the paddles
-  paddle1.y += paddle1.speed;
-  paddle2.y += paddle2.speed;
+// Function to check for a winner
+function checkWinner() {
+  const winPatterns = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+    [0, 4, 8], [2, 4, 6]             // Diagonals
+  ];
 
-  // Update the ball
-  ball.x += ball.vx;
-  ball.y += ball.vy;
-
-  // Collision detection
-  if (ball.x <= 0) {
-    // Ball hit the left wall, reset the game
-    ball.x = canvas.width / 2;
-    ball.y = canvas.height / 2;
-    ball.vx = -ball.vx;
-  } else if (ball.x + BALL_SIZE >= canvas.width) {
-    // Ball hit the right wall, reset the game
-    ball.x = canvas.width / 2;
-    ball.y = canvas.height / 2;
-    ball.vx = -ball.vx;
+  for (const pattern of winPatterns) {
+    const [a, b, c] = pattern;
+    if (gameBoard[a] && gameBoard[a] === gameBoard[b] && gameBoard[a] === gameBoard[c]) {
+      return gameBoard[a];
+    }
   }
 
-  if (ball.y <= 0 || ball.y + BALL_SIZE >= canvas.height) {
-    // Ball hit the top or bottom wall, bounce
-    ball.vy = -ball.vy;
+  if (!gameBoard.includes('')) {
+    return 'draw';
   }
 
-  // Check for collisions with the paddles
-  if (ball.x <= paddle1.x + PADDLE_WIDTH && ball.y >= paddle1.y && ball.y <= paddle1.y + PADDLE_HEIGHT) {
-    // Ball hit the left paddle, bounce
-    ball.vx = -ball.vx;
-  } else if (ball.x + BALL_SIZE >= paddle2.x && ball.y >= paddle2.y && ball.y <= paddle2.y + PADDLE_HEIGHT) {
-    // Ball hit the right paddle, bounce
-    ball.vx = -ball.vx;
-  }
-
-  // Clear the canvas
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Draw the paddles and ball
-  ctx.fillStyle = 'red';
-  ctx.fillRect(paddle1.x, paddle1.y, PADDLE_WIDTH, PADDLE_HEIGHT);
-  ctx.fillRect(paddle2.x, paddle2.y, PADDLE_WIDTH, PADDLE_HEIGHT);
-  ctx.fillRect(ball.x, ball.y, BALL_SIZE, BALL_SIZE);
-
-  // Update the AI
-  ai();
-
-  // Request the next frame
-  requestAnimationFrame(update);
+  return null;
 }
 
-// Add event listeners for paddle movement
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'w') {
-    paddle1.speed = -4;
-  } else if (e.key === 's') {
-    paddle1.speed = 4;
-  }
-});
+// Function to display the result
+function displayResult(result) {
+  gameActive = false;
+  document.getElementById('result').textContent = result;
+}
 
-document.addEventListener('keyup', (e) => {
-  if (e.key === 'w' || e.key === 's') {
-    paddle1.speed = 0;
-  }
-});
-
-// Start the game loop
-update();
+// Function to reset the game
+function resetGame() {
+  gameBoard = ['', '', '', '', '', '', '', '', ''];
+  currentPlayer = 'X';
+  gameActive = true;
+  document.getElementById('result').textContent = '';
+  document.querySelectorAll('.cell').forEach(cell => cell.textContent = '');
+}
