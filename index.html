@@ -1,28 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="D:\tic tac toe\style.css">
-    <title>Tic-Tac-Toe</title>
+  <meta charset="UTF-8">
+  <title>Ping Pong </title>
+  <style>
+    canvas {
+      border: 5px solid black;
+      background-color: rgb(12, 97, 188);
+      margin-left: 25%;
+      margin-top: 3%;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Tic-Tac-Toe</h1>
-        <div id="board" class="board">
-            <div class="cell" onclick="makeMove(this)"></div>
-            <div class="cell" onclick="makeMove(this)"></div>
-            <div class="cell" onclick="makeMove(this)"></div>
-            <div class="cell" onclick="makeMove(this)"></div>
-            <div class="cell" onclick="makeMove(this)"></div>
-            <div class="cell" onclick="makeMove(this)"></div>
-            <div class="cell" onclick="makeMove(this)"></div>
-            <div class="cell" onclick="makeMove(this)"></div>
-            <div class="cell" onclick="makeMove(this)"></div>
-        </div>
-        <p id="result"></p>
-        <button onclick="resetGame()">Reset Game</button>
-    </div>
-    <script src="D:\tic tac toe\script.js"></script>
+   <center> <h1><b>Ping Pong Game</b></h1></center>
+  <canvas id="canvas" width="400" height="400"><</canvas>
+  <script src="D:\ping pong ai\script.js"></script>
 </body>
 </html>
